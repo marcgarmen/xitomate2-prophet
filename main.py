@@ -1,83 +1,47 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Any
 import pandas as pd
 from prophet import Prophet
-import logging
-
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
 class UsageHistory(BaseModel):
-    ingredient: str
-    dates: List[str]
-    quantities: List[float]
+    ingredient: Optional[str] = None
+    dates: Optional[List[str]] = None
+    quantities: Optional[List[float]] = None
+
+class SalesHistory(BaseModel):
+    date: str
+    total: float
 
 class ForecastRequest(BaseModel):
-    history: List[UsageHistory]
+    history: List[Any]  # Puede ser UsageHistory o SalesHistory
 
 @app.post("/forecast")
-async def forecast(req: ForecastRequest):
-    try:
-        results = []
-        for item in req.history:
-            try:
-                # Validar datos
-                if not item.dates or not item.quantities:
-                    raise ValueError(f"No data provided for ingredient {item.ingredient}")
-                
-                if len(item.dates) != len(item.quantities):
-                    raise ValueError(f"Dates and quantities must have the same length for ingredient {item.ingredient}")
-
-                # Crear DataFrame
-                df = pd.DataFrame({'ds': item.dates, 'y': item.quantities})
-                
-                # Configurar y entrenar modelo
-                m = Prophet(
-                    yearly_seasonality=False,
-                    weekly_seasonality=True,
-                    daily_seasonality=True
-                )
-                m.fit(df)
-                
-                # Generar pronóstico
-                future = m.make_future_dataframe(periods=7)
-                forecast = m.predict(future)
-                
-                # Formatear resultado
-                forecast_data = forecast[['ds', 'yhat']].tail(7)
-                forecast_list = [
-                    {
-                        'date': row['ds'].strftime('%Y-%m-%d'),
-                        'predicted_quantity': float(row['yhat'])
-                    }
-                    for _, row in forecast_data.iterrows()
-                ]
-                
-                results.append({
-                    'ingredient': item.ingredient,
-                    'forecast': forecast_list
-                })
-                
-            except Exception as e:
-                logger.error(f"Error processing ingredient {item.ingredient}: {str(e)}")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Error processing ingredient {item.ingredient}: {str(e)}"
-                )
-        
-        return results
-        
-    except Exception as e:
-        logger.error(f"Error in forecast endpoint: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating forecast: {str(e)}"
-        )
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+def forecast(req: ForecastRequest):
+    results = []
+    # Si es forecast de ventas (lista de dicts con 'date' y 'total')
+    if req.history and isinstance(req.history[0], dict) and 'total' in req.history[0]:
+        df = pd.DataFrame(req.history)
+        df = df.rename(columns={'date': 'ds', 'total': 'y'})
+        m = Prophet()
+        m.fit(df)
+        future = m.make_future_dataframe(periods=5)
+        forecast_df = m.predict(future)
+        # Devuelve los últimos 7 días pronosticados
+        forecast = forecast_df[['ds', 'yhat']].tail(5).to_dict(orient='records')
+        return forecast
+    # Si es forecast de ingredientes (lista de UsageHistory)
+    for item in req.history:
+        if 'ingredient' in item and 'dates' in item and 'quantities' in item:
+            df = pd.DataFrame({'ds': item['dates'], 'y': item['quantities']})
+            m = Prophet()
+            m.fit(df)
+            future = m.make_future_dataframe(periods=5)
+            forecast = m.predict(future)
+            results.append({
+                'ingredient': item['ingredient'],
+                'forecast': forecast[['ds', 'yhat']].tail(5).to_dict(orient='records')
+            })
+    return results
