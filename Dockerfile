@@ -29,5 +29,5 @@ COPY . .
 # Expone el puerto por defecto de uvicorn
 EXPOSE 8080
 
-# Comando para ejecutar la app en Cloud Run (usa el puerto 8080)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Comando para ejecutar la app en Cloud Run leyendo la variable de entorno PORT
+CMD ["python", "run.py"]
