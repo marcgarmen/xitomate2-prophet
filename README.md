@@ -28,3 +28,12 @@ gcloud run deploy xitomate2-prophet \
 ```
 
 Set the environment variable `PROPHET_URL` in your xitomate-2 instance to the deployed service URL so the two services can communicate.
+
+## Running tests
+
+The project uses `pytest` for unit tests. Install the dependencies from
+`requirements.txt` and execute:
+
+```bash
+pytest
+```
