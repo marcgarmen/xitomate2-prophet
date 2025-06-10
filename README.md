@@ -12,6 +12,8 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 The service listens on port `8000` locally and exposes a single `/forecast` endpoint.
+Requests that fail during forecasting will now raise an HTTP `500` error with a
+JSON body describing the issue.
 
 ## Deploying to Cloud Run
 
