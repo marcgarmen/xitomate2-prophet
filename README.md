@@ -17,7 +17,7 @@ JSON body describing the issue.
 
 ## Deploying to Cloud Run
 
-When building for Cloud Run use the provided `Dockerfile`. The container expects to run on port `8080` which is already configured in the Docker image. A minimal deployment command would look like:
+When building for Cloud Run use the provided `Dockerfile`. The container reads the `PORT` environment variable and defaults to `8080` if not set. A minimal deployment command would look like:
 
 ```bash
 gcloud run deploy xitomate2-prophet \
