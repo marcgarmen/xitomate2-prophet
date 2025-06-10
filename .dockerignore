@@ -1,0 +1,26 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git repository
+.git
+.gitignore
+
+# Local environment files
+.env
+venv/
+ENV/
+.venv/
+
+# Build artifacts
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# Miscellaneous
+.DS_Store
+.ipynb_checkpoints/
+*.log
