@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any
@@ -62,4 +62,4 @@ def forecast(req: ForecastRequest):
         return results
     except Exception as e:
         print("ERROR:", e)
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
