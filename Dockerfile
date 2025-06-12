@@ -14,20 +14,14 @@ RUN apt-get update && \
         git \
         && rm -rf /var/lib/apt/lists/*
 
-# Crea el directorio de la app
 WORKDIR /app
 
-# Copia los archivos de requerimientos primero para aprovechar el cache de Docker
 COPY requirements.txt .
 
-# Instala las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el resto del código de la app
 COPY . .
 
-# Expone el puerto por defecto de uvicorn
-EXPOSE 8080
+EXPOSE 5000
 
-# Comando para ejecutar la app en Cloud Run leyendo la variable de entorno PORT
 CMD ["python", "run.py"]
